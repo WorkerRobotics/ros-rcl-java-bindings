@@ -52,7 +52,7 @@ jobs:
             -I /opt/ros/${{ matrix.ros_distro }}/include/rmw \
             -I /opt/ros/${{ matrix.ros_distro }}/include/rosidl_runtime_c \
             --header-class-name RclLib \
-            /opt/ros/${{ matrix.ros_distro }}/include/rcl/rcl.h
+            /opt/ros/${{ matrix.ros_distro }}/rcl/include/rcl/rcl.h
 
       - name: Create POM file
         run: |
