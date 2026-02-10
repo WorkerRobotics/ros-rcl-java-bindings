@@ -1,0 +1,82 @@
+name: Publish ROS 2 Java Bindings Library
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        ros_distro: [humble, jazzy, kilted]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Project (Workflow only)
+        uses: actions/checkout@v4
+
+      - name: Setup ROS 2
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: ${{ matrix.ros_distro }}
+
+      - name: Setup Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'oracle'
+          server-id: github
+
+      - name: Install Jextract (JDK 25)
+        run: |
+          wget https://download.java.net/java/early_access/jextract/25/openjdk-25-jextract+2-4_linux-x64_bin.tar.gz
+          tar -xf openjdk-25-jextract+2-4_linux-x64_bin.tar.gz
+          echo "$(pwd)/jextract-25/bin" >> $GITHUB_PATH
+
+      - name: Generate Bindings
+        run: |
+          # Activeer de ROS omgeving om de juiste paden te laden
+          source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+          mkdir -p src/main/java
+          
+          # We wijzen direct naar de binaire installatie in /opt/ros/
+          # Dit is de meest robuuste methode omdat deze headers matchen met de geinstalleerde libs.
+          jextract --output src/main/java \
+            -t org.ros2.rcl \
+            -I /opt/ros/${{ matrix.ros_distro }}/include/rcl \
+            -I /opt/ros/${{ matrix.ros_distro }}/include/rcutils \
+            -I /opt/ros/${{ matrix.ros_distro }}/include/rmw \
+            -I /opt/ros/${{ matrix.ros_distro }}/include/rosidl_runtime_c \
+            --header-class-name RclLib \
+            /opt/ros/${{ matrix.ros_distro }}/include/rcl/rcl.h
+
+      - name: Create POM file
+        run: |
+          cat <<EOF > pom.xml
+          <project xmlns="http://maven.apache.org/POM/4.0.0">
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>com.github.${{ github.repository_owner }}</groupId>
+            <artifactId>ros2-java-bindings-${{ matrix.ros_distro }}</artifactId>
+            <version>25.0.${{ github.run_number }}</version>
+            <properties>
+              <maven.compiler.source>25</maven.compiler.source>
+              <maven.compiler.target>25</maven.compiler.target>
+              <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+            <distributionManagement>
+              <repository>
+                <id>github</id>
+                <url>https://maven.pkg.github.com/${{ github.repository }}</url>
+              </repository>
+            </distributionManagement>
+          </project>
+          EOF
+
+      - name: Build and Publish to GitHub Packages
+        run: mvn deploy -DskipTests --batch-mode
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
