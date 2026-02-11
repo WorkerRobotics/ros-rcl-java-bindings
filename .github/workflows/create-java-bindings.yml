@@ -43,16 +43,19 @@ jobs:
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
           mkdir -p src/main/java
           
-          # We wijzen direct naar de binaire installatie in /opt/ros/
-          # Dit is de meest robuuste methode omdat deze headers matchen met de geinstalleerde libs.
+          ROS_INC="/opt/ros/${{ matrix.ros_distro }}/include"
+          
           jextract --output src/main/java \
             -t org.ros2.rcl \
-            -I /opt/ros/${{ matrix.ros_distro }}/include/rcl \
-            -I /opt/ros/${{ matrix.ros_distro }}/include/rcutils \
-            -I /opt/ros/${{ matrix.ros_distro }}/include/rmw \
-            -I /opt/ros/${{ matrix.ros_distro }}/include/rosidl_runtime_c \
             --header-class-name RclLib \
-            /opt/ros/${{ matrix.ros_distro }}/include/rcl/rcl/rcl.h
+            -I $ROS_INC \
+            -I $ROS_INC/rcl \
+            -I $ROS_INC/rcutils \
+            -I $ROS_INC/rmw \
+            -I $ROS_INC/rcl_yaml_param_parser \
+            -I $ROS_INC/rosidl_runtime_c \
+            -I $ROS_INC/rosidl_typesupport_interface \
+            $ROS_INC/rcl/rcl/rcl.h
 
       - name: Create POM file
         run: |
