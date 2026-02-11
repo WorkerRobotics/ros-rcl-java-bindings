@@ -1,6 +1,7 @@
 # ROS2 Java Bindings
 ![Build Status](https://github.com/workerrobotics/ros-rcl-java-bindings/actions/workflows/create-java-bindings.yml/badge.svg)
-[![Version](https://img.shields.io/github/v/tag/WorkerRobotics/ros-rcl-java-bindings?label=version&color=blue)](https://github.com/WorkerRobotics/ros-rcl-java-bindings/tags)
+![Jazzy Version](https://img.shields.io/github/v/tag/WorkerRobotics/ros-rcl-java-bindings?filter=jazzy-*&label=jazzy)
+![Kilted Version](https://img.shields.io/github/v/tag/WorkerRobotics/ros-rcl-java-bindings?filter=kilted-*&label=kilted)
 ![License](https://img.shields.io/github/license/workerrobotics/ros-rcl-java-bindings)
 ![GitHub last commit](https://img.shields.io/github/last-commit/workerrobotics/ros-rcl-java-bindings)
 
