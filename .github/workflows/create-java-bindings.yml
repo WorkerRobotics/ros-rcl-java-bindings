@@ -55,6 +55,7 @@ jobs:
             -I $ROS_INC/rcl_yaml_param_parser \
             -I $ROS_INC/rosidl_runtime_c \
             -I $ROS_INC/rosidl_typesupport_interface \
+            -I $ROS_INC/type_description_interfaces \
             $ROS_INC/rcl/rcl/rcl.h
 
       - name: Create POM file
