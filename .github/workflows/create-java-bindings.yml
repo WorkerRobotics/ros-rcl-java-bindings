@@ -78,6 +78,7 @@ jobs:
               -I $ROS_INC/rosidl_typesupport_interface \
               -I $ROS_INC/builtin_interfaces \
               -I $ROS_INC/rcutils \
+              -I $ROS_INC/fastcdr \
               $TEMP_HEADER
               
             rm $TEMP_HEADER
