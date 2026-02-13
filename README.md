@@ -32,3 +32,20 @@ For ROS - Jazzy
   <version>25.0.10</version>
 </dependency>
 ```
+
+Don't forget to add the JVM flag `--enable-native-access=ALL-UNNAMED` and add the ros distro lib folder to the java runtime library path.
+
+```xml
+<configuration>
+    <argLine>
+        --enable-native-access=ALL-UNNAMED
+        -Djava.library.path=/opt/ros/jazzy/lib
+    </argLine>
+</configuration>
+```
+
+The `ALL-UNNAMED` value is based on giving native access to all classes which are not mentioned in a specific `module-info.java`, if you're using `module-info.java` please use the name of the targeted modules.
+
+To retain the packages from the GitHub packages youĺl need to add the github repository of WorkerRobotics to your repository list and add your username and generated personal token to your settings.xml. This is because GitHub requires an authenticated user to download packages from their maven repositories.
+
+Note: this project doesn't contain a loader which loads the ros distro lib folder for the SymbolLookup process of the bindings.

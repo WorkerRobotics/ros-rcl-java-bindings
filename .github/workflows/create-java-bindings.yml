@@ -62,6 +62,25 @@ jobs:
             -I $ROS_INC/rosidl_dynamic_typesupport_fastrtps \
             $ROS_INC/rcl/rcl/rcl.h
 
+          for PKG in std_msgs geometry_msgs std_srvs; do
+            echo "Generating bindings for $PKG..."
+            
+            # Maak een tijdelijke wrapper header die alle .h bestanden uit de msg/srv map includeert
+            TEMP_HEADER="master_$PKG.h"
+            find $ROS_INC/$PKG/$PKG/msg $ROS_INC/$PKG/$PKG/srv -name "*.h" 2>/dev/null | xargs -I {} echo '#include "{}"' > $TEMP_HEADER
+            
+            jextract --output src/main/java \
+              -t org.ros2.rcl.msgs \
+              --header-class-name ${PKG^^}_Lib \
+              -I $ROS_INC \
+              -I $ROS_INC/$PKG \
+              -I $ROS_INC/rosidl_runtime_c \
+              -I $ROS_INC/rcutils \
+              $TEMP_HEADER
+              
+            rm $TEMP_HEADER
+          done
+
       - name: Create POM file
         run: |
           cat <<EOF > pom.xml
