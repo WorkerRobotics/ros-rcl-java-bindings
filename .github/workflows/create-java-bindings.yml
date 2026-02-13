@@ -79,6 +79,7 @@ jobs:
               -I $ROS_INC/builtin_interfaces \
               -I $ROS_INC/rcutils \
               -I $ROS_INC/fastcdr \
+              -I $ROS_INC/std_msgs \
               $TEMP_HEADER
               
             rm $TEMP_HEADER
