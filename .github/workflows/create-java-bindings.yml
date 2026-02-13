@@ -76,6 +76,7 @@ jobs:
               -I $ROS_INC/$PKG \
               -I $ROS_INC/rosidl_runtime_c \
               -I $ROS_INC/rosidl_typesupport_interface \
+              -I $ROS_INC/builtin_interfaces \
               -I $ROS_INC/rcutils \
               $TEMP_HEADER
               
