@@ -67,7 +67,7 @@ jobs:
             
             # Maak een tijdelijke wrapper header die alle .h bestanden uit de msg/srv map includeert
             TEMP_HEADER="master_$PKG.h"
-            find $ROS_INC/$PKG/$PKG/msg $ROS_INC/$PKG/$PKG/srv -name "*.h" 2>/dev/null | xargs -I {} echo '#include "{}"' > $TEMP_HEADER
+            find $ROS_INC/$PKG/$PKG/msg $ROS_INC/$PKG/$PKG/srv -maxdepth 1 -name "*.h" 2>/dev/null | xargs -I {} echo '#include "{}"' > $TEMP_HEADER
             
             jextract --output src/main/java \
               -t org.ros2.rcl.msgs \
