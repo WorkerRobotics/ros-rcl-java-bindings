@@ -161,7 +161,23 @@ jobs:
             exit 1
           fi
 
-      - name: Prepare Maven release
+      - name: Set release version
+        env:
+          RELEASE_VERSION: ${{ inputs.releaseVersion }}
+        run: |
+          set -euo pipefail
+
+          mvn \
+            --batch-mode \
+            versions:set \
+            -DnewVersion="$RELEASE_VERSION" \
+            -DgenerateBackupPoms=false
+
+          git add pom.xml
+          git commit -m "Release ${RELEASE_VERSION}"
+          git tag "v${RELEASE_VERSION}"
+
+      - name: Publish to Maven Central
         env:
           RELEASE_VERSION: ${{ inputs.releaseVersion }}
           DEVELOPMENT_VERSION: ${{ inputs.developmentVersion }}
@@ -169,28 +185,25 @@ jobs:
         run: |
           set -euo pipefail
 
-          mvn \
-            --batch-mode \
-            --no-transfer-progress \
-            release:clean \
-            release:prepare \
-            -DreleaseVersion="$RELEASE_VERSION" \
-            -DdevelopmentVersion="$DEVELOPMENT_VERSION" \
-            -Dtag="v$RELEASE_VERSION" \
-            -Dgpg.passphrase="${MAVEN_GPG_PASSPHRASE}" \
-            -Darguments="-DskipTests=true -DskipITs=true -Dgpg.passphrase=${MAVEN_GPG_PASSPHRASE}" \
-            -Prelease
-
-      - name: Perform Maven release
-        env:
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          set -euo pipefail
+          GPG_KEY_ID="$(gpg --batch --list-secret-keys --with-colons | awk -F: '/^fpr:/ {print $10; exit}')"
 
           mvn \
             --batch-mode \
             --no-transfer-progress \
-            release:perform \
+            -Prelease \
+            clean deploy \
+            -DskipTests=true \
+            -DskipITs=true \
             -Dgpg.passphrase="${MAVEN_GPG_PASSPHRASE}" \
-            -Darguments="-DskipTests=true -DskipITs=true -Dgpg.passphrase=${MAVEN_GPG_PASSPHRASE}" \
-            -Prelease
+            -Dgpg.keyname="${GPG_KEY_ID}"
+
+          mvn \
+            --batch-mode \
+            versions:set \
+            -DnewVersion="$DEVELOPMENT_VERSION" \
+            -DgenerateBackupPoms=false
+
+          git add pom.xml
+          git commit -m "Prepare ${DEVELOPMENT_VERSION}"
+          git push origin HEAD
+          git push origin "v${RELEASE_VERSION}"
