@@ -5,7 +5,7 @@
 
 <groupId>com.worker-robotics</groupId>
 <artifactId>ros2-java-bindings-jazzy</artifactId>
-<version>25.0.22-SNAPSHOT</version>
+<version>25.0.22</version>
 <packaging>jar</packaging>
 
 <name>ROS 2 Java Bindings for Jazzy</name>
