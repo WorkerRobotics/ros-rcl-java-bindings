@@ -170,7 +170,8 @@ jobs:
             -DreleaseVersion="$RELEASE_VERSION" \
             -DdevelopmentVersion="$DEVELOPMENT_VERSION" \
             -Dtag="v$RELEASE_VERSION" \
-            -Darguments="-DskipTests=true -DskipITs=true"
+            -Darguments="-DskipTests=true -DskipITs=true" \
+            -Prelease
 
       - name: Perform Maven release
         run: |
@@ -180,4 +181,5 @@ jobs:
             --batch-mode \
             --no-transfer-progress \
             release:perform \
-            -Darguments="-DskipTests=true -DskipITs=true"
+            -Darguments="-DskipTests=true -DskipITs=true" \
+            -Prelease
