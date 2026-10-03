@@ -63,6 +63,7 @@ jobs:
       - name: Configure GPG signing key
         env:
           GPG_PRIVATE_KEY_B64: ${{ secrets.GPG_PRIVATE_KEY_B64 }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           set -euo pipefail
 
@@ -71,19 +72,24 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${MAVEN_GPG_PASSPHRASE:-}" ]; then
+          if [ -z "${GPG_PASSPHRASE:-}" ]; then
             echo "GPG_PASSPHRASE secret is missing" >&2
             exit 1
           fi
 
-          # The BC signer expects the ASCII-armored private key
-          # in the MAVEN_GPG_KEY environment variable.
-          {
-            echo 'MAVEN_GPG_KEY<<EOF_GPG_KEY'
-            printf '%s' "$GPG_PRIVATE_KEY_B64" | base64 --decode
-            echo
-            echo 'EOF_GPG_KEY'
-          } >> "$GITHUB_ENV"
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+
+          printf '%s' "$GPG_PRIVATE_KEY_B64" | base64 --decode > ~/.gnupg/private.asc
+
+          gpg --batch --import --pinentry-mode loopback ~/.gnupg/private.asc
+
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "use-agent" >> ~/.gnupg/gpg.conf
+
+          gpg --batch --list-secret-keys --keyid-format LONG
+
+          echo "MAVEN_GPG_PASSPHRASE=${GPG_PASSPHRASE}" >> "$GITHUB_ENV"
 
       - name: Validate Maven Central credentials
         run: |
@@ -159,6 +165,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.releaseVersion }}
           DEVELOPMENT_VERSION: ${{ inputs.developmentVersion }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           set -euo pipefail
 
@@ -170,10 +177,13 @@ jobs:
             -DreleaseVersion="$RELEASE_VERSION" \
             -DdevelopmentVersion="$DEVELOPMENT_VERSION" \
             -Dtag="v$RELEASE_VERSION" \
-            -Darguments="-DskipTests=true -DskipITs=true" \
+            -Dgpg.passphrase="${MAVEN_GPG_PASSPHRASE}" \
+            -Darguments="-DskipTests=true -DskipITs=true -Dgpg.passphrase=${MAVEN_GPG_PASSPHRASE}" \
             -Prelease
 
       - name: Perform Maven release
+        env:
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           set -euo pipefail
 
@@ -181,5 +191,6 @@ jobs:
             --batch-mode \
             --no-transfer-progress \
             release:perform \
-            -Darguments="-DskipTests=true -DskipITs=true" \
+            -Dgpg.passphrase="${MAVEN_GPG_PASSPHRASE}" \
+            -Darguments="-DskipTests=true -DskipITs=true -Dgpg.passphrase=${MAVEN_GPG_PASSPHRASE}" \
             -Prelease
